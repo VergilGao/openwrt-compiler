@@ -11,8 +11,8 @@
 #
 
 # fix https://github.com/vernesong/OpenClash/issues/839
-rm -rf feeds/packages/libs/libcap
-svn co https://github.com/openwrt/packages/trunk/libs/libcap feeds/packages/libs/libcap
+# rm -rf feeds/packages/libs/libcap
+# svn co https://github.com/openwrt/packages/trunk/libs/libcap feeds/packages/libs/libcap
 
 # Modify default IP
 sed -i 's/192.168.1.1/10.0.0.1/g' package/base-files/files/bin/config_generate

@@ -18,6 +18,6 @@ git clone --depth=1 https://github.com/jerrykuku/luci-app-argon-config package/l
 git clone -b lede --depth=1 https://github.com/pymumu/luci-app-smartdns.git package/luci-app-smartdns
 
 # luci-app-openclash
-git clone --depth=1 https://github.com/vernesong/OpenClash.git package/OpenClash
+git clone -b v0.40.7-beta --depth=1 https://github.com/vernesong/OpenClash.git package/OpenClash
 mv package/OpenClash/luci-app-openclash package/luci-app-openclash
 rm -rf package/OpenClash
