@@ -24,4 +24,4 @@ git clone -b lede --depth=1 https://github.com/pymumu/luci-app-smartdns.git pack
 
 # luci-app-vssr
 git clone https://github.com/jerrykuku/lua-maxminddb.git package/lua-maxminddb
-git clone -b v1.22 --depth=1 https://github.com/jerrykuku/luci-app-vssr.git package/luci-app-vssr
+git clone --depth=1 https://github.com/jerrykuku/luci-app-vssr.git package/luci-app-vssr
