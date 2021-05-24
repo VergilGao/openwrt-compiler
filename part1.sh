@@ -22,4 +22,4 @@ git clone https://github.com/jerrykuku/lua-maxminddb.git package/lua-maxminddb
 git clone --depth=1 https://github.com/jerrykuku/luci-app-vssr.git package/luci-app-vssr
 
 # 京东签到
-git clone -b v1.0.5 --depth=1 https://github.com/jerrykuku/luci-app-jd-dailybonus.git
+git clone -b v1.0.5 --depth=1 https://github.com/jerrykuku/luci-app-jd-dailybonus.git package/luci-app-jd-dailybonus
