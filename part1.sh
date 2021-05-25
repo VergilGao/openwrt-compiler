@@ -23,3 +23,6 @@ git clone --depth=1 https://github.com/jerrykuku/luci-app-vssr.git package/luci-
 
 # 京东签到
 git clone -b v1.0.5 --depth=1 https://github.com/jerrykuku/luci-app-jd-dailybonus.git package/luci-app-jd-dailybonus
+
+# dockerman
+git clone -b v0.5.13 --depth=1 https://github.com/lisaac/luci-app-dockerman package/luci-app-dockerman
