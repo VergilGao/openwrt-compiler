@@ -17,3 +17,6 @@
 # Modify default IP
 sed -i 's/192.168.1.1/10.0.0.1/g' package/base-files/files/bin/config_generate
 sed -i 's/192.168/10.0/g' package/base-files/files/bin/config_generate
+
+# Modify DHCP client 
+sed -i 's/\${vendorid:+-V "$vendorid"}/-V \"\"/g' package/network/config/netifd/files/lib/netifd/proto/dhcp.sh
