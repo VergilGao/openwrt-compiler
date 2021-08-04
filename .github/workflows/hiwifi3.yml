@@ -1,0 +1,159 @@
+#
+# Copyright (c) 2021 VergilGao <https://catfight360.com>
+# ___      ___ _______   ________  ________  ___  ___       ________  ________  ________     
+# |\  \    /  /|\  ___ \ |\   __  \|\   ____\|\  \|\  \     |\   ____\|\   __  \|\   __  \    
+# \ \  \  /  / | \   __/|\ \  \|\  \ \  \___|\ \  \ \  \    \ \  \___|\ \  \|\  \ \  \|\  \   
+#  \ \  \/  / / \ \  \_|/_\ \   _  _\ \  \  __\ \  \ \  \    \ \  \  __\ \   __  \ \  \\\  \  
+#   \ \    / /   \ \  \_|\ \ \  \\  \\ \  \|\  \ \  \ \  \____\ \  \|\  \ \  \ \  \ \  \\\  \ 
+#    \ \__/ /     \ \_______\ \__\\ _\\ \_______\ \__\ \_______\ \_______\ \__\ \__\ \_______\
+#     \|__|/       \|_______|\|__|\|__|\|_______|\|__|\|_______|\|_______|\|__|\|__|\|_______|  
+#
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
+#
+# Description: 此脚本基于 P3TERX 的 Actions-OpenWrt 仓库修改而来。
+# ┌────────────────────────────────────────────────────────┐
+# │  Copyright (c) 2019-2020 P3TERX <https://p3terx.com>   │
+# │                                                        │
+# │ This is free software, licensed under the MIT License. │
+# │ See /LICENSE for more information.                     │
+# │                                                        │
+# │ https://github.com/P3TERX/Actions-OpenWrt              │
+# │ Description: Build OpenWrt using GitHub Actions        │
+# └────────────────────────────────────────────────────────┘
+#
+
+name: hiwifi3
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+  schedule:
+    - cron: 0 8 * * 6
+
+env:
+  REPO_URL: https://github.com/openwrt/openwrt
+  REPO_BRANCH: openwrt-21.02
+  DEVICE_NAME: hiwifi3
+  FILES: hiwifi3/files
+  FEEDS_CONF: hiwifi3/feeds.conf
+  CONFIG_FILE: hiwifi3/.config
+  DIY_P1_SH: hiwifi3/part1.sh
+  DIY_P2_SH: hiwifi3/part2.sh
+  UPLOAD_FIRMWARE: true
+  TZ: Asia/Shanghai
+
+jobs:
+  compile:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: 初始化编译环境
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install $(curl -fsSL git.io/depends-ubuntu-1804)
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+        sudo timedatectl set-timezone "$TZ"
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
+
+    - name: 编译安装 po2lmo
+      run: |
+        git clone --depth=1 https://github.com/VergilGao/po2lmo /tmp/po2lmo
+        cd /tmp/po2lmo
+        make && sudo make install
+
+    - name: 克隆 openwrt 源码
+      working-directory: /workdir
+      run: |
+        df -hT $PWD
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+
+    - name: 加载自定义 feeds.conf 文件
+      run: |
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P1_SH
+
+    - name: 修改 luci 软件包中的多语言文件以适配 luci master
+      run: |
+        chmod +x convert.sh
+        cd openwrt
+        $GITHUB_WORKSPACE/convert.sh
+
+    - name: 加载自定义配置文件
+      run: |
+        cd openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        cd ..
+        [ -e $FILES ] && mv $FILES openwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        chmod +x $DIY_P2_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+
+    - name: SSH connection to Actions
+      uses: P3TERX/ssh2actions@v1.0.0
+      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
+      env:
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
+    - name: 编译固件
+      id: compile
+      run: |
+        cd openwrt
+        make defconfig
+        make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+        echo -e "$(nproc) thread compile"
+        make -j$(nproc) || make -j1 || make -j1 V=s
+        echo "::set-output name=status::success"
+        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+
+    - name: 检查剩余空间
+      if: (!cancelled())
+      run: df -hT
+
+    - name: 组织文件
+      id: organize
+      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+      run: |
+        cd openwrt/bin/targets/*/*
+        rm -rf packages
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "::set-output name=status::success"
+
+    - name: 上传固件目录
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: ${{ env.FIRMWARE }}
+
+    - name: 移除旧的 Artifacts
+      uses: c-hive/gha-remove-artifacts@v1.2.0
+      with:
+        age: '1 day'
+        skip-recent: 5
+
+    - name: 删除旧的 workflow 运行记录
+      uses: GitRML/delete-workflow-runs@main
+      with:
+        retain_days: 30
