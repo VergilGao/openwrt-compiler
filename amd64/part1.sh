@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# ddns-scripts-dnspod OpenWrt 官方 DDNS 插件的 dnspod_cn 更新脚本
-git clone --depth=1 https://github.com/small-5/ddns-scripts-dnspod package/ddns-scripts-dnspod
+# ddns-scripts-dnspod OpenWrt 官方 DDNS 插件的 dnspod 更新脚本
+git clone --depth=1 https://github.com/VergilGao/ddns-scripts-dnspod package/ddns-scripts-dnspod
 
 # luci-app-adblock-plus 基于DNS的广告过滤
 git clone -b 1.0-8 --depth=1 https://github.com/small-5/luci-app-adblock-plus package/luci-app-adblock-plus
