@@ -69,12 +69,6 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
-    - name: 编译安装 po2lmo
-      run: |
-        git clone --depth=1 https://github.com/VergilGao/po2lmo /tmp/po2lmo
-        cd /tmp/po2lmo
-        make && sudo make install
-
     - name: 克隆 openwrt 源码
       working-directory: /workdir
       run: |
@@ -88,12 +82,6 @@ jobs:
         chmod +x $DIY_P1_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
-
-    - name: 修改 luci 软件包中的多语言文件以适配 luci master
-      run: |
-        chmod +x convert.sh
-        cd openwrt
-        $GITHUB_WORKSPACE/convert.sh
 
     - name: 加载自定义配置文件
       run: |
