@@ -26,13 +26,10 @@
 name: amd64-compiler
 
 on:
-  repository_dispatch:
   workflow_dispatch:
     inputs:
-      ssh:
-        description: 'SSH connection to Actions'
-        required: false
-        default: 'false'
+      manual:
+        description: '手动触发一次编译'
   schedule:
     - cron: 0 8 * * 6
 

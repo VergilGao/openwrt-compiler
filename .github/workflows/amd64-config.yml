@@ -26,15 +26,10 @@
 name: amd64-config
 
 on:
-  repository_dispatch:
   workflow_dispatch:
     inputs:
       ssh:
         description: 'SSH connection to Actions'
-        required: false
-        default: 'false'
-  schedule:
-    - cron: 0 8 * * 6
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
@@ -45,7 +40,6 @@ env:
   CONFIG_FILE: amd64/.config
   DIY_P1_SH: amd64/part1.sh
   DIY_P2_SH: amd64/part2.sh
-  UPLOAD_FIRMWARE: true
   TZ: Asia/Shanghai
 
 jobs:
@@ -97,7 +91,6 @@ jobs:
 
     - name: SSH connection to Actions
       uses: mxschmitt/action-tmate@v3
-      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
 
     - name: 组织配置文件
       run: |
@@ -108,7 +101,7 @@ jobs:
     - name: 上传配置文件
       uses: actions/upload-artifact@main
       with:
-        name: OpenWrt-firmware-${{ env.DEVICE_NAME }}-${{ env.FILE_DATE }}
+        name: OpenWrt-${{ env.DEVICE_NAME }}-Config
         path: /tmp/upload
 
     - name: 移除旧的 Artifacts
