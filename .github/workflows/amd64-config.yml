@@ -1,0 +1,123 @@
+#
+# Copyright (c) 2021 VergilGao <https://catfight360.com>
+# ___      ___ _______   ________  ________  ___  ___       ________  ________  ________     
+# |\  \    /  /|\  ___ \ |\   __  \|\   ____\|\  \|\  \     |\   ____\|\   __  \|\   __  \    
+# \ \  \  /  / | \   __/|\ \  \|\  \ \  \___|\ \  \ \  \    \ \  \___|\ \  \|\  \ \  \|\  \   
+#  \ \  \/  / / \ \  \_|/_\ \   _  _\ \  \  __\ \  \ \  \    \ \  \  __\ \   __  \ \  \\\  \  
+#   \ \    / /   \ \  \_|\ \ \  \\  \\ \  \|\  \ \  \ \  \____\ \  \|\  \ \  \ \  \ \  \\\  \ 
+#    \ \__/ /     \ \_______\ \__\\ _\\ \_______\ \__\ \_______\ \_______\ \__\ \__\ \_______\
+#     \|__|/       \|_______|\|__|\|__|\|_______|\|__|\|_______|\|_______|\|__|\|__|\|_______|  
+#
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
+#
+# Description: 此脚本基于 P3TERX 的 Actions-OpenWrt 仓库修改而来。
+# ┌────────────────────────────────────────────────────────┐
+# │  Copyright (c) 2019-2020 P3TERX <https://p3terx.com>   │
+# │                                                        │
+# │ This is free software, licensed under the MIT License. │
+# │ See /LICENSE for more information.                     │
+# │                                                        │
+# │ https://github.com/P3TERX/Actions-OpenWrt              │
+# │ Description: Build OpenWrt using GitHub Actions        │
+# └────────────────────────────────────────────────────────┘
+#
+
+name: amd64-config
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+  schedule:
+    - cron: 0 8 * * 6
+
+env:
+  REPO_URL: https://github.com/openwrt/openwrt
+  REPO_BRANCH: openwrt-21.02
+  DEVICE_NAME: amd64
+  FILES: amd64/files
+  FEEDS_CONF: amd64/feeds.conf
+  CONFIG_FILE: amd64/.config
+  DIY_P1_SH: amd64/part1.sh
+  DIY_P2_SH: amd64/part2.sh
+  UPLOAD_FIRMWARE: true
+  TZ: Asia/Shanghai
+
+jobs:
+  config:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: 初始化编译环境
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install $(curl -fsSL git.io/depends-ubuntu-1804)
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+        sudo timedatectl set-timezone "$TZ"
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
+
+    - name: 克隆 openwrt 源码
+      working-directory: /workdir
+      run: |
+        df -hT $PWD
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+
+    - name: 加载自定义 feeds.conf 文件
+      run: |
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P1_SH
+
+    - name: 加载自定义配置文件
+      run: |
+        cd openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        cd ..
+        [ -e $FILES ] && mv $FILES openwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        chmod +x $DIY_P2_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+
+    - name: SSH connection to Actions
+      uses: mxschmitt/action-tmate@v3
+      if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
+
+    - name: 组织配置文件
+      run: |
+        cd openwrt
+        mkdir -p /tmp/upload
+        cp .config /tmp/upload
+
+    - name: 上传配置文件
+      uses: actions/upload-artifact@main
+      with:
+        name: OpenWrt-firmware-${{ env.DEVICE_NAME }}-${{ env.FILE_DATE }}
+        path: /tmp/upload
+
+    - name: 移除旧的 Artifacts
+      uses: c-hive/gha-remove-artifacts@v1.2.0
+      with:
+        age: '1 day'
+        skip-recent: 5
+
+    - name: 删除旧的 workflow 运行记录
+      uses: GitRML/delete-workflow-runs@main
+      with:
+        retain_days: 30
