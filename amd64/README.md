@@ -26,6 +26,7 @@ x86_64
 - zoneinfo-all
 - byobu(tmux后端)
 - cfdisk 世界上最好用的磁盘分区工具
+- uugamebooster 网易UU加速器（无luci界面）
 
 ## Luci 配置
 
@@ -40,7 +41,7 @@ x86_64
 - luci-app-ddns ddns插件，附带了 dnspod 支持
 - luci-app-mwan3 负载均衡，用于iptv
 - luci-app-omcproxy omcproxy代理，用于iptv组播
-- luci-app-openclash clash，懂的都得
+- luci-app-vssr 懂的都得
 - luci-app-smartdns dns 选优及防污染
 - luci-app-udpxy iptv用
 - luci-app-upnp upnp
