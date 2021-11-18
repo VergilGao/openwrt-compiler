@@ -26,7 +26,7 @@ x86_64
 - zoneinfo-all
 - byobu(tmux后端)
 - cfdisk 世界上最好用的磁盘分区工具
-- uugamebooster 网易UU加速器（无luci界面）
+- uugamebooster 网易UU加速器
 
 ## Luci 配置
 
@@ -46,6 +46,7 @@ x86_64
 - luci-app-udpxy iptv用
 - luci-app-upnp upnp
 - luci-app-wol 网络唤醒
+- luci-app-uugamebooster 网易UU加速器
 
 ## 其他
 
