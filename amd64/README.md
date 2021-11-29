@@ -22,11 +22,8 @@ x86_64
 - htop 用于监控系统资源占用
 - unzip 常用的解压工具
 - nano 更友好的文本编辑器
-- zsh 比bash更强大的终端
 - zoneinfo-all
-- byobu(tmux后端)
 - cfdisk 世界上最好用的磁盘分区工具
-- uugamebooster 网易UU加速器
 
 ## Luci 配置
 
@@ -41,12 +38,11 @@ x86_64
 - luci-app-ddns ddns插件，附带了 dnspod 支持
 - luci-app-mwan3 负载均衡，用于iptv
 - luci-app-omcproxy omcproxy代理，用于iptv组播
-- luci-app-vssr 懂的都得
-- luci-app-smartdns dns 选优及防污染
+- luci-app-smartdns smartdns
 - luci-app-udpxy iptv用
 - luci-app-upnp upnp
-- luci-app-wol 网络唤醒
 - luci-app-uugamebooster 网易UU加速器
+- luci-app-vssr vssr
 
 ## 其他
 
