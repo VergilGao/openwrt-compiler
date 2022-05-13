@@ -23,13 +23,24 @@
 # └────────────────────────────────────────────────────────┘
 #
 
-name: amd64-compiler
+name: amd64
 
 on:
   workflow_dispatch:
     inputs:
-      manual:
-        description: '手动触发一次编译'
+      output:
+        description: '选择编译固件还是生成配置文件'
+        required: true
+        type: choice
+        default: 'firmware'
+        options:
+          - firmware
+          - config
+      ssh:
+        description: '当生成配置文件时是否使用ssh'
+        required: true
+        type: boolean
+        default: true
   schedule:
     - cron: 0 8 * * 6
 
@@ -39,14 +50,14 @@ env:
   DEVICE_NAME: amd64
   FILES: amd64/files
   FEEDS_CONF: amd64/feeds.conf
-  CONFIG_FILE: amd64/.config
+  CONFIG_FILE: amd64/seed.config
   DIY_P1_SH: amd64/part1.sh
   DIY_P2_SH: amd64/part2.sh
   UPLOAD_FIRMWARE: true
   TZ: Asia/Shanghai
 
 jobs:
-  compile:
+  run:
     runs-on: ubuntu-20.04
 
     steps:
@@ -92,8 +103,31 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
+    - name: SSH connection to Actions
+      uses: mxschmitt/action-tmate@v3
+      if: github.event.inputs.output == 'config' && github.event.inputs.ssh && !cancelled()
+
+    - name: 组织配置文件
+      if: github.event.inputs.output == 'config' && !cancelled()
+      id: organize_config
+      run: |
+        cd openwrt
+        rm -f .config.old
+        make defconfig
+        mkdir -p /tmp/upload/config
+        ./scripts/diffconfig.sh > /tmp/upload/config/seed.config
+        echo "::set-output name=status::success"
+        echo "FILE_DATE=$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+
+    - name: 上传配置文件
+      if: steps.organize_config.outputs.status == 'success' && !cancelled()
+      uses: actions/upload-artifact@main
+      with:
+        name: openwrt-config-${{ env.DEVICE_NAME }}-${{ env.FILE_DATE }}
+        path: /tmp/upload
+
     - name: 编译固件
-      id: compile
+      if: github.event.inputs.output != 'config' && !cancelled()
       run: |
         cd openwrt
         make defconfig
@@ -105,33 +139,30 @@ jobs:
         echo "::set-output name=status::success"
         echo "FILE_DATE=$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
-    - name: 检查剩余空间
-      if: (!cancelled())
-      run: df -hT
-
-    - name: 组织文件
-      id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+    - name: 组织固件文件
+      if: github.event.inputs.output != 'config' && !cancelled()
+      id: organize_firmware
       run: |
         cd openwrt/bin/targets/*/*
         rm -rf packages
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        mkdir -p /tmp/upload/firmware
+        mv ./* /tmp/upload/firmware
         echo "::set-output name=status::success"
 
-    - name: 上传固件目录
+    - name: 上传固件
       uses: actions/upload-artifact@main
-      if: steps.organize.outputs.status == 'success' && !cancelled()
+      if: steps.organize_firmware.outputs.status == 'success' && !cancelled()
       with:
-        name: OpenWrt-firmware-${{ env.DEVICE_NAME }}-${{ env.FILE_DATE }}
-        path: ${{ env.FIRMWARE }}
+        name: openwrt-firmware-${{ env.DEVICE_NAME }}-${{ env.FILE_DATE }}
+        path: /tmp/upload/firmware
 
     - name: 移除旧的 Artifacts
       uses: c-hive/gha-remove-artifacts@v1.2.0
       with:
         age: '1 day'
-        skip-recent: 5
+        skip-recent: 20
 
     - name: 删除旧的 workflow 运行记录
       uses: GitRML/delete-workflow-runs@main
       with:
-        retain_days: 30
+        retain_days: 90
