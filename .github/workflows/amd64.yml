@@ -53,7 +53,6 @@ env:
   CONFIG_FILE: amd64/seed.config
   DIY_P1_SH: amd64/part1.sh
   DIY_P2_SH: amd64/part2.sh
-  UPLOAD_FIRMWARE: true
   TZ: Asia/Shanghai
 
 jobs:
