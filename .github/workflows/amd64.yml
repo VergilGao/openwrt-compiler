@@ -105,7 +105,7 @@ jobs:
 
     - name: SSH connection to Actions
       uses: mxschmitt/action-tmate@v3
-      if: github.event.inputs.output == 'config' && github.event.inputs.ssh && !cancelled()
+      if: github.event.inputs.output == 'config' && github.event.inputs.ssh == 'true' && !cancelled()
 
     - name: 组织配置文件
       if: github.event.inputs.output == 'config' && !cancelled()
