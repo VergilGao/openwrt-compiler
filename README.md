@@ -14,6 +14,8 @@
 
 ❤️感谢 [恩山无线论坛](https://www.right.com.cn/forum/forum.php)的 dan123 同学在 [这个帖子](https://www.right.com.cn/forum/thread-5014665-1-1.html) 里贡献的 convert.sh 脚本，此脚本可以将原有lede插件的简体中文语言支持转化为对19.07及21.02的支持。
 
+❤️感谢 [moewah的这篇文章](https://www.moewah.com/archives/4003.html) 提供的精简config文件的思路。
+
 ## License
 
 [MIT](https://github.com/VergilGao/openwrt-actions/blob/master/LICENSE) © VergilGao
