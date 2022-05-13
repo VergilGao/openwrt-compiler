@@ -95,8 +95,10 @@ jobs:
     - name: 组织配置文件
       run: |
         cd openwrt
+        rm -f .config.old
+        make defconfig
         mkdir -p /tmp/upload
-        cp .config /tmp/upload
+        ./scripts/diffconfig.sh > /tmp/upload/seed.config
 
     - name: 上传配置文件
       uses: actions/upload-artifact@main
