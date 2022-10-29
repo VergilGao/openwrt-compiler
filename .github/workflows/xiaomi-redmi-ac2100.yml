@@ -23,7 +23,7 @@
 # └────────────────────────────────────────────────────────┘
 #
 
-name: home
+name: xiaomi-redmi-ac2100
 
 on:
   workflow_dispatch:
@@ -47,12 +47,12 @@ on:
 env:
   REPO_URL: https://github.com/openwrt/openwrt
   REPO_BRANCH: openwrt-21.02
-  DEVICE_NAME: home
-  FILES: home/files
-  FEEDS_CONF: home/feeds.conf
-  CONFIG_FILE: home/seed.config
-  DIY_P1_SH: home/part1.sh
-  DIY_P2_SH: home/part2.sh
+  DEVICE_NAME: xiaomi-redmi-ac2100
+  FILES: xiaomi-redmi-ac2100/files
+  FEEDS_CONF: xiaomi-redmi-ac2100/feeds.conf
+  CONFIG_FILE: xiaomi-redmi-ac2100/seed.config
+  DIY_P1_SH: xiaomi-redmi-ac2100/part1.sh
+  DIY_P2_SH: xiaomi-redmi-ac2100/part2.sh
   TZ: Asia/Shanghai
 
 jobs:
